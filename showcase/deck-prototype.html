@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>toolbox — Slide Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ── Design Tokens ─────────────────────────────── */
+  :root {
+    --bg:              #080C14;
+    --surface:         #0F1724;
+    --surface-up:      #1A2436;
+    --surface-overlay: #1E293B;
+    --border:          #1E2D44;
+    --border-active:   #2D4464;
+    --border-accent:   rgba(91,110,245,0.25);
+    --accent:          #5B6EF5;
+    --accent-dark:     #3A4FD4;
+    --accent-text:     #8B9EFF;
+    --accent-glow:     rgba(91,110,245,0.12);
+    --text:            #E8ECF4;
+    --text-secondary:  #C8D0E0;
+    --text-mid:        #8A8F98;
+    --text-dim:        #62666D;
+    --success:         #10B981;
+    --success-text:    #34D399;
+    --warning-text:    #FCD34D;
+    --error-text:      #FCA5A5;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --r:      12px;
+    --r-sm:   6px;
+    --r-lg:   16px;
+    --r-full: 9999px;
+    --shadow-accent: 0 0 0 4px rgba(91,110,245,0.15);
+  }
+
+  /* ── Reset ─────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: #000;
+    font-family: var(--font-sans);
+    overflow: hidden;
+    color: var(--text);
+  }
+
+  /* ── Stage ─────────────────────────────────────── */
+  .stage {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* ── Slide Container ───────────────────────────── */
+  .deck {
+    position: relative;
+    width: min(100vw, calc(100vh * 16/9));
+    height: min(100vh, calc(100vw * 9/16));
+    aspect-ratio: 16 / 9;
+  }
+
+  /* ── Individual Slide ──────────────────────────── */
+  .slide {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    padding: clamp(32px, 4%, 56px) clamp(40px, 5%, 72px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+    overflow: hidden;
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── Lead / Cover slides ───────────────────────── */
+  .slide.lead {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide.lead::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    height: 70%;
+    background: radial-gradient(ellipse at center, rgba(91,110,245,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .slide.lead h1 {
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 0.95;
+    color: var(--text);
+    position: relative;
+  }
+
+  .slide.lead h2 {
+    font-size: clamp(14px, 1.8vw, 22px);
+    font-weight: 400;
+    color: var(--text-mid);
+    margin-top: clamp(10px, 1.5vw, 18px);
+    letter-spacing: -0.01em;
+    max-width: 640px;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  /* ── Content slides ────────────────────────────── */
+  .slide-header {
+    margin-bottom: clamp(16px, 2.5vw, 32px);
+    flex-shrink: 0;
+  }
+
+  .slide-eyebrow {
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 0.9vw, 11px);
+    font-weight: 700;
+    color: var(--accent-text);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .slide h1 {
+    font-size: clamp(20px, 3vw, 40px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+
+  /* ── Slide body ────────────────────────────────── */
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: clamp(10px, 1.5vw, 18px);
+    min-height: 0;
+  }
+
+  /* ── Blockquote ────────────────────────────────── */
+  .slide blockquote {
+    border-left: 3px solid var(--accent);
+    padding: clamp(10px, 1.5vw, 16px) clamp(14px, 2vw, 24px);
+    background: var(--accent-glow);
+    border-radius: 0 var(--r-sm) var(--r-sm) 0;
+    font-size: clamp(12px, 1.5vw, 18px);
+    color: var(--text-secondary);
+    line-height: 1.55;
+    font-style: normal;
+    font-weight: 400;
+    margin-bottom: clamp(4px, 0.8vw, 8px);
+  }
+
+  /* ── Bullet list ───────────────────────────────── */
+  .slide ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1vw, 12px);
+  }
+
+  .slide ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(8px, 1vw, 14px);
+    font-size: clamp(10px, 1.3vw, 16px);
+    color: var(--text-mid);
+    line-height: 1.55;
+  }
+
+  .slide ul li::before {
+    content: '—';
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    flex-shrink: 0;
+    margin-top: 0.15em;
+    opacity: 0.7;
+  }
+
+  .slide ul.checkmarks li::before {
+    content: '✅';
+    font-style: normal;
+    font-size: 0.9em;
+  }
+
+  /* ── Decision slide layout ──────────────────────── */
+  .decision-grid {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.5vw, 18px);
+  }
+
+  .decision-row {
+    display: grid;
+    grid-template-columns: minmax(80px, 14%) 1fr;
+    gap: clamp(8px, 1.2vw, 16px);
+    align-items: baseline;
+  }
+
+  .decision-label {
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 0.85vw, 10px);
+    font-weight: 700;
+    color: var(--accent-text);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-top: 0.2em;
+  }
+
+  .decision-value {
+    font-size: clamp(10px, 1.3vw, 15px);
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .decision-value strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ── Divider between label/choice/why ──────────── */
+  .decision-grid .decision-row + .decision-row {
+    padding-top: clamp(8px, 1vw, 12px);
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Table ─────────────────────────────────────── */
+  .slide table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: clamp(9px, 1.1vw, 13px);
+  }
+
+  .slide table th {
+    font-family: var(--font-mono);
+    font-size: clamp(7px, 0.8vw, 10px);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: clamp(6px, 0.8vw, 10px) clamp(8px, 1vw, 14px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .slide table td {
+    padding: clamp(8px, 1vw, 12px) clamp(8px, 1vw, 14px);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-mid);
+    line-height: 1.5;
+    vertical-align: top;
+  }
+
+  .slide table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .slide table tr:hover td {
+    background: var(--surface-up);
+    color: var(--text);
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .slide table td:first-child {
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 0.9vw, 11px);
+    color: var(--accent-text);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .slide table td:last-child {
+    color: var(--text-mid);
+    font-size: clamp(8px, 0.95vw, 12px);
+  }
+
+  /* ── What Was Hard layout ───────────────────────── */
+  .hard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.5vw, 18px);
+  }
+
+  .hard-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: clamp(12px, 1.5vw, 18px) clamp(14px, 1.8vw, 22px);
+  }
+
+  .hard-item strong {
+    display: block;
+    font-size: clamp(10px, 1.2vw, 14px);
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .hard-arrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: clamp(9px, 1.05vw, 13px);
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+
+  .hard-arrow::before {
+    content: '→';
+    color: var(--accent-text);
+    font-family: var(--font-mono);
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+
+  /* ── Code / mono inline ─────────────────────────── */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface-up);
+    color: var(--accent-text);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* ── Slide number ───────────────────────────────── */
+  .slide-number {
+    position: absolute;
+    bottom: clamp(12px, 1.5vw, 20px);
+    right: clamp(24px, 3vw, 40px);
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 0.8vw, 10px);
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Progress bar ───────────────────────────────── */
+  .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    transition: width 300ms ease;
+    border-radius: 0 var(--r-full) var(--r-full) 0;
+  }
+
+  /* ── Nav controls ───────────────────────────────── */
+  .nav {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-active);
+    border-radius: var(--r-full);
+    padding: 8px 16px;
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-mid);
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: var(--r-sm);
+    transition: color 150ms, background 150ms;
+    line-height: 1;
+    font-family: var(--font-mono);
+  }
+
+  .nav-btn:hover {
+    color: var(--text);
+    background: var(--surface-up);
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .nav-counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  /* ── Lead close slide ───────────────────────────── */
+  .slide.lead .repo-link {
+    font-family: var(--font-mono);
+    font-size: clamp(10px, 1.2vw, 14px);
+    color: var(--text-dim);
+    margin-top: clamp(12px, 1.5vw, 20px);
+    position: relative;
+  }
+
+  /* ── Keyword hint ──────────────────────────────── */
+  .slide.lead .hint {
+    position: absolute;
+    bottom: clamp(12px, 1.5vw, 20px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: clamp(8px, 0.8vw, 10px);
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="deck" id="deck">
+
+    <!-- ── Slide 1: Cover ─────────────────────────── -->
+    <div class="slide lead active" data-index="0">
+      <h1>toolbox</h1>
+      <h2>Five agents. One coherent output.<br>No designer required.</h2>
+      <span class="hint">← → to navigate · Space to advance</span>
+      <div class="progress" id="progress"></div>
+      <span class="slide-number" id="slide-number">1 / 11</span>
+    </div>
+
+    <!-- ── Slide 2: The Problem ───────────────────── -->
+    <div class="slide" data-index="1">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Context</div>
+        <h1>The Problem</h1>
+      </div>
+      <div class="slide-body">
+        <blockquote>AI can write a design brief — it just can't hold five cognitively incompatible modes in the same context window without losing coherence.</blockquote>
+        <ul>
+          <li>Discovery, research, specification, verification, and synthesis each require a different epistemic posture — one reading, one searching, one building, one auditing, one assembling</li>
+          <li>A single long prompt collapses all five into one completion with no structured handoff and no way to correct drift between phases</li>
+          <li>The result reads well in isolation and breaks down across sections — contrast ratios that don't match the stated visual language, decisions that ignore the problem named in paragraph one</li>
+        </ul>
+      </div>
+      <div class="progress" id="progress"></div>
+      <span class="slide-number">2 / 11</span>
+    </div>
+
+    <!-- ── Slide 3: What Was Built ────────────────── -->
+    <div class="slide" data-index="2">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Solution</div>
+        <h1>What Was Built</h1>
+      </div>
+      <div class="slide-body">
+        <p style="font-size: clamp(11px,1.4vw,17px); color: var(--text-secondary); line-height:1.55; margin-bottom: clamp(8px,1vw,14px);">
+          <strong style="color:var(--text); font-weight:700;">toolbox</strong> — two multi-agent orchestration pipelines that decompose AI generation tasks into discrete phases, enforcing structured handoffs instead of letting context drift.
+        </p>
+        <ul>
+          <li><code>/design-lifecycle</code> — classified codebase genre, real-world UI references, hex token values with rationale, component hierarchy, and a six-check verification pass before synthesis</li>
+          <li><code>/project-showcase</code> — comprehensive documentation, a case study with concrete decisions, and a Marp slide deck — all validated before the deck is written</li>
+          <li>Each pipeline extracts named structured blocks from every agent and re-injects them downstream as explicit, labeled data contracts</li>
+          <li>Both run as Claude Code skills — one slash command in any project directory</li>
+        </ul>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">3 / 11</span>
+    </div>
+
+    <!-- ── Slide 4: How It Works ──────────────────── -->
+    <div class="slide" data-index="3">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Architecture</div>
+        <h1>How It Works</h1>
+      </div>
+      <div class="slide-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Component</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Orchestration</td>
+              <td><code>SKILL.md</code> per skill</td>
+              <td>Sequences agents, routes named output blocks, holds zero domain knowledge</td>
+            </tr>
+            <tr>
+              <td>Discovery</td>
+              <td>Thinking Partner</td>
+              <td>Reads codebase signals, classifies genre and maturity, produces the central data contract</td>
+            </tr>
+            <tr>
+              <td>Execution</td>
+              <td>Maker / Inspiration / Verifier</td>
+              <td>Domain-specific agents that consume the contract and produce artifacts</td>
+            </tr>
+            <tr>
+              <td>Quality Gate</td>
+              <td>Verifier / Validator</td>
+              <td>Runs discrete checks before synthesis — failures are named, not inherited</td>
+            </tr>
+            <tr>
+              <td>Synthesis</td>
+              <td>Amplifier</td>
+              <td>Assembles final output with explicit anti-AI-voice tone rules</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">4 / 11</span>
+    </div>
+
+    <!-- ── Slide 5: Decision 1 ────────────────────── -->
+    <div class="slide" data-index="4">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Decision 01 / 03</div>
+        <h1>The Zero-Knowledge Orchestrator</h1>
+      </div>
+      <div class="slide-body">
+        <div class="decision-grid">
+          <div class="decision-row">
+            <span class="decision-label">Question</span>
+            <span class="decision-value">Should the orchestrator understand design or documentation, or just coordinate agents that do?</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Choice</span>
+            <span class="decision-value"><code>SKILL.md</code> carries <strong>no domain knowledge</strong> — it sequences and routes named structured blocks, nothing else. All domain knowledge lives in agent files.</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Why it matters</span>
+            <span class="decision-value">Coordination logic stays stable regardless of what any agent does — updating the Verifier's WCAG criteria requires editing <strong>exactly one file</strong>, not touching the orchestration layer.</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">5 / 11</span>
+    </div>
+
+    <!-- ── Slide 6: Decision 2 ────────────────────── -->
+    <div class="slide" data-index="5">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Decision 02 / 03</div>
+        <h1>Pre-Reading All Agent Files at Startup</h1>
+      </div>
+      <div class="slide-body">
+        <div class="decision-grid">
+          <div class="decision-row">
+            <span class="decision-label">Question</span>
+            <span class="decision-value">When should the orchestrator learn what each downstream phase needs?</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Choice</span>
+            <span class="decision-value">Read every agent file in a <strong>single pass before spawning any agent</strong>, giving the orchestrator the full pipeline in scope before execution begins.</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Why it matters</span>
+            <span class="decision-value">The orchestrator knows Phase 5 needs both Phase 1 and Phase 2 output before Phase 1 has run — making output routing <strong>correct by construction</strong>, not discovered ad hoc at each handoff.</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">6 / 11</span>
+    </div>
+
+    <!-- ── Slide 7: Decision 3 ────────────────────── -->
+    <div class="slide" data-index="6">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Decision 03 / 03</div>
+        <h1>Named Structured Output Contracts</h1>
+      </div>
+      <div class="slide-body">
+        <div class="decision-grid">
+          <div class="decision-row">
+            <span class="decision-label">Question</span>
+            <span class="decision-value">How do you pass information between agents without letting context drift or balloon?</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Choice</span>
+            <span class="decision-value">Each agent produces a <strong>named structured block</strong> with required fields. The orchestrator extracts and re-injects these blocks verbatim, labeled, into downstream agents.</span>
+          </div>
+          <div class="decision-row">
+            <span class="decision-label">Why it matters</span>
+            <span class="decision-value">A <strong>200-token structured block</strong> instead of a 3,000-token history keeps downstream agents focused. The Verifier audits design against the original Project Brief — not just the Maker's output in isolation.</span>
+          </div>
+        </div>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">7 / 11</span>
+    </div>
+
+    <!-- ── Slide 8: What Was Hard ─────────────────── -->
+    <div class="slide" data-index="7">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Challenges</div>
+        <h1>What Was Hard</h1>
+      </div>
+      <div class="slide-body">
+        <div class="hard-grid">
+          <div class="hard-item">
+            <strong>Contract-first sequencing — the mistake that cascaded</strong>
+            <div class="hard-arrow">Individual agent prompt quality was iterated before interface contracts were locked. Every output format change cascaded into rewrites of three downstream prompts. Define and lock the data contracts first.</div>
+          </div>
+          <div class="hard-item">
+            <strong>Preventing cognitive mode bleeding between agents</strong>
+            <div class="hard-arrow">Each agent receives exactly what it needs, not the full conversation history. Discovery agents don't generate solutions. Verification agents don't author content. Mode boundaries enforced structurally.</div>
+          </div>
+          <div class="hard-item">
+            <strong>Making output human-readable, not AI-readable</strong>
+            <div class="hard-arrow">Amplifier agents carry explicit prohibited-pattern rules: no process meta-commentary, no adjectives where values belong. Named prohibited patterns work; vague tone guidance does not.</div>
+          </div>
+        </div>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">8 / 11</span>
+    </div>
+
+    <!-- ── Slide 9: Results ───────────────────────── -->
+    <div class="slide" data-index="8">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Outcomes</div>
+        <h1>Results</h1>
+      </div>
+      <div class="slide-body">
+        <ul class="checkmarks">
+          <li>Project ran both skills on its own codebase — <code>DESIGN_BRIEF.md</code> generated by <code>/design-lifecycle</code>, this deck generated by <code>/project-showcase</code></li>
+          <li>Validation Report passed all five checks with zero critical findings: accuracy, voice and tone, completeness, specificity, and deck readiness</li>
+          <li>Zero-buzzword audit: no instances of "leveraged," "robust," "seamless," or "best practices" in either artifact</li>
+          <li><code>DESIGN_BRIEF.md</code> names specific CSS variable values, specific contrast ratios, and specific pixel dimensions — anti-AI-voice rules working</li>
+          <li>Six-check graduated Verifier structure (pass / warn / fail per check) gives actionable prioritization, not a binary result</li>
+        </ul>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">9 / 11</span>
+    </div>
+
+    <!-- ── Slide 10: What's Next ──────────────────── -->
+    <div class="slide" data-index="9">
+      <div class="slide-header">
+        <div class="slide-eyebrow">Forward</div>
+        <h1>What's Next</h1>
+      </div>
+      <div class="slide-body">
+        <ul>
+          <li>Add schema validation on named output blocks so format drift fails at extraction time — a lightweight JSON wrapper around required fields catches this without changing the natural-language interface</li>
+          <li>Build a retry path for warn-level and fail-level Verifier findings before the Amplifier runs, rather than surfacing open items in <code>DESIGN_BRIEF.md</code> for the developer to resolve manually</li>
+          <li>Add a codebase-aware entry point for projects with existing design systems, where the Maker extends and audits current token conventions rather than generating a parallel system</li>
+        </ul>
+      </div>
+      <div class="progress"></div>
+      <span class="slide-number">10 / 11</span>
+    </div>
+
+    <!-- ── Slide 11: Close ────────────────────────── -->
+    <div class="slide lead" data-index="10">
+      <h1>toolbox</h1>
+      <p class="repo-link">github.com/evreisberg/toolbox</p>
+      <div class="progress"></div>
+      <span class="slide-number">11 / 11</span>
+    </div>
+
+  </div><!-- /deck -->
+</div><!-- /stage -->
+
+<!-- ── Navigation ──────────────────────────────── -->
+<div class="nav">
+  <button class="nav-btn" id="btn-prev" aria-label="Previous slide" disabled>←</button>
+  <span class="nav-counter" id="nav-counter">1 / 11</span>
+  <button class="nav-btn" id="btn-next" aria-label="Next slide">→</button>
+</div>
+
+<script>
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const total = slides.length;
+  let current = 0;
+
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const navCounter = document.getElementById('nav-counter');
+
+  function goTo(n) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(n, total - 1));
+    slides[current].classList.add('active');
+
+    const pct = ((current + 1) / total) * 100;
+    slides[current].querySelectorAll('.progress').forEach(p => {
+      p.style.width = pct + '%';
+    });
+
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current === total - 1;
+    navCounter.textContent = `${current + 1} / ${total}`;
+  }
+
+  btnPrev.addEventListener('click', () => goTo(current - 1));
+  btnNext.addEventListener('click', () => goTo(current + 1));
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+      e.preventDefault();
+      goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      goTo(current - 1);
+    }
+  });
+
+  // initialise progress bar on slide 1
+  goTo(0);
+</script>
+</body>
+</html>
