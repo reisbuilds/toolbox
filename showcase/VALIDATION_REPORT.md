@@ -1,164 +1,139 @@
-# Validation Report — design-lifecycle showcase artifacts
+# Validation Report
 
-**Artifacts reviewed:**
-- `/home/user/toolbox/showcase/DOCUMENTATION.md`
-- `/home/user/toolbox/showcase/CASE_STUDY.md`
+## Summary
+
+4 checks passed | 2 warnings | 0 critical items
 
 ---
 
 ## Check 1 — Accuracy
 
-**Status: ✅ Passed**
+✅ **Passed** (with one ⚠️ Warning noted below)
 
-**Problem statement match:**
-The case study's problem statement reads: "The result of collapsing a pipeline into a prompt is predictable. You get output that's internally consistent within each section but inconsistent across sections." and "output that sounds authoritative but falls apart under scrutiny." This is a close paraphrase of "Single-prompt design generation produces internally coherent but cross-phase incoherent output" — the core failure mode is correctly named and explained. The TL;DR also states directly: "collapsing design into one prompt produces confident-sounding noise."
+**Problem statement consistency.** The core thesis is consistent across the Project Profile, documentation, and case study: single-prompt generation produces cross-phase incoherence because no single completion can hold five cognitively incompatible modes simultaneously. The framing holds across all three artifacts.
 
-**Three technically interesting decisions in the Process section:**
+**Specific illustrative examples diverge slightly.** The Profile's Problem Statement uses "tokens that don't reference the inspiration, components that don't map to identified flows." The case study uses "tokens that don't satisfy the contrast ratios mentioned two paragraphs later, case study decisions that contradict the stated problem." These are not contradictions — they are different valid illustrations of the same failure mode — but they are not the same examples. The divergence is minor and unlikely to confuse a reader.
 
-1. Pre-read pass — ✅ Present. "Orchestrator vs. Monolith" section explains that the orchestrator reads all five agent files in a single pass before spawning any sub-agent.
-2. Project Brief as traveling contract — ✅ Present. "The Data Contract Problem" section explicitly discusses the Project Brief as a verbatim structured block passed to every downstream agent.
-3. Verifier placement — ✅ Present. "Why the Verifier Exists" section explains mandatory placement between the Maker and Amplifier, with rationale about crystallizing failures.
+**Tech stack.** Documentation and case study are fully consistent with the Profile. Marp CLI, Mobbin MCP, Claude Code skill system, Markdown prompt engineering — all present and described consistently in the tech stack table and throughout the narrative.
 
-**Factual contradictions:** None found. The documentation's pipeline table, agent descriptions, and output file list are consistent with the case study's narrative. Both documents agree on: five agents, four output files, six Verifier checks, WCAG AA thresholds (4.5:1 normal text, 3:1 large text and UI components), 44×44pt iOS / 48×48dp Android touch targets, and the Project Brief traveling to all downstream phases.
+**Technically Interesting Decisions.** All three decisions from the Profile appear as named Process sections in the case study: The Zero-Knowledge Orchestrator, Pre-Reading Agent Files at Startup, Named Structured Output Contracts. The documentation's Design Decisions section covers all five Profile decisions. No omissions.
+
+**Contradictions.** None found.
+
+⚠️ **Warning — Self-referential accuracy claim.**
+
+Both the case study TL;DR and the Outcomes section assert that "the Validation Report passed all five checks with zero warnings." This report finds zero critical items and two warnings. The "zero warnings" phrasing is not accurate against this report's findings. Both warnings are minor (one is this self-referential claim itself; the second follows from the same root cause), but the claim should not assert a specific outcome before the report exists or assert a count that does not match the actual findings. If these artifacts are shared externally, this line should be updated to reflect the actual report outcome before the deck is generated.
 
 ---
 
 ## Check 2 — Voice and Tone
 
-**Documentation — active voice, present tense: ✅ Passed**
+✅ **Passed**
 
-The documentation is written in active, present-tense voice throughout. Representative examples: "The orchestrator reads all five agent files," "The Verifier does not redesign. It audits," "The Amplifier synthesizes." No passive constructions found that undermine clarity.
+**Active voice — documentation.** Active voice throughout. No passive constructions detected in key explanatory sections. Representative examples: "The orchestrator reads every agent file," "Updating the Verifier's contrast check criteria requires editing only `agents/04-verifier.md`," "This separation makes individual agents replaceable." The Design Decisions section is particularly clean.
 
-**Case study — first person throughout: ✅ Passed**
+**First person — case study.** Consistently first person throughout all reflective and analytical sections. "I could have written one very long prompt. I chose not to." "I built two multi-agent orchestration pipelines." "I worked from the inside out." No slippage into third person or impersonal constructions.
 
-First person is used consistently in the reflective sections: "I could have written one very long prompt," "I chose not to," "I didn't have a clear answer," "I landed on," "I've seen repeatedly," "I spent time iterating," "I'd also build."
+**Buzzword scan — full pass across both artifacts.**
 
-Note: The Process section blends analytical third-person-like exposition with first person in places ("I could have," "I added"). This is a reasonable and common case study voice. It does not read as inconsistent.
+Checked for: "leveraged", "scalable solution", "best practices", "robust", "synergistic", "impactful", "seamless", "holistic", and variants.
 
-**Buzzword audit:**
+Result: zero instances found in either artifact.
 
-Scanning both documents for: "leveraged", "scalable", "robust", "best practices", "synergistic", "seamless", "holistic", "impactful."
+**Case study tone.** Reads like a builder who made real decisions and got some of them wrong. The Contract-First Sequencing section names a mistake and explains the specific cascade it caused (updating three downstream prompts every time the Thinking Partner's output format changed). The Outcomes section closes with "This is MVP" — calibrated framing, not a triumphant wrap-up.
 
-- "leveraged" — Not found.
-- "scalable" — Not found.
-- "robust" — Not found.
-- "best practices" — Not found.
-- "synergistic" — Not found.
-- "seamless" — Not found.
-- "holistic" — Not found.
-- "impactful" — Not found.
-
-**Result: Zero buzzwords detected in either artifact.** ✅ Passed
-
-**"What I'd Do Differently" — specific or hedged:**
-
-✅ Passed — specific named things appear.
-
-Finding 1: "The data contract definition was the hardest problem and I solved it too late. I spent time iterating on agent prompt quality before I nailed down exactly what fields the Project Brief needed and exactly how the Inspiration Summary would be structured." — Specific. Names the Project Brief field definition problem and describes the sequencing mistake precisely.
-
-Finding 2: "I'd also build a smarter focus-area scoping mechanism... A structured focus object — with explicit field for feature name, affected flows, and out-of-scope areas — would produce tighter, more coherent scoping." — Specific. Names both the current limitation ($ARGUMENTS as loose string) and the proposed alternative (structured focus object with named fields).
-
-Neither answer is hedged. Both name what should have been done differently and why.
+**"What I'd Do Differently" specificity.** Names a concrete sequencing mistake: defining data contracts before writing individual agent prompts. Names the specific cascade it caused. Proposes a concrete alternative: lock the contracts first, then write agent prompts to fill them. The second paragraph names a second specific failure mode (silent format drift) and proposes a specific fix (structured output schema with JSON wrapper). Neither answer is generic or hedged.
 
 ---
 
 ## Check 3 — Completeness
 
-**Documentation:**
+| Section | Documentation | Case Study |
+|---|:---:|:---:|
+| Problem clearly stated | ✅ | ✅ |
+| Target user identified | ✅ | ✅ |
+| Architecture explained | ✅ | ✅ |
+| Key decisions with rationale | ✅ | ✅ |
+| Honest current limitations | ✅ | ✅ |
+| Forward-looking next steps | ✅ | ✅ |
+| Genuine reflection | N/A | ✅ |
 
-| Element | Status | Notes |
-|---------|--------|-------|
-| Problem stated | ✅ | Overview paragraph explains the collapse-all-into-one-prompt failure mode clearly |
-| Target user | ✅ | "developers and technical PMs who have a codebase and need a real design foundation... without a designer on the team" |
-| Architecture | ✅ | Pipeline table with Phase / Agent / Input / Output; agent-by-agent descriptions |
-| Key decisions with rationale | ✅ | Three explicit Design Decisions sections with tradeoffs named |
-| Honest limitations | ✅ | Known Limitations section — eight specific limitations including approximate contrast checks, no retry logic, sequential-only pipeline |
-| Forward-looking next steps | ✅ | What's Next — three specific items |
-| Genuine reflection | N/A | Not required for documentation |
+**Notes.**
 
-**Case Study:**
+Documentation's Known Limitations section names seven specific failure modes with enough detail to be actionable. None are vague. "No schema enforcement on data contracts" names the exact failure mode (silent extraction of an empty or malformed block) and names the missing mechanism (programmatic schema validation). "Focus area is a loose string" names both the current state and why it matters for coherence.
 
-| Element | Status | Notes |
-|---------|--------|-------|
-| Problem stated | ✅ | "The Problem" section — names the failure mode precisely |
-| Target user | ✅ | Context / The Situation identifies developers who hit the one-prompt failure |
-| Architecture | ✅ | "The Solution" section describes the pipeline architecture and each agent's role |
-| Key decisions with rationale | ✅ | Three named decision sections in Process & Decisions, each with tradeoffs |
-| Honest limitations | ✅ | "This is MVP" acknowledged; specific limitation about mature design systems |
-| Forward-looking next steps | ✅ | What's Next — three specific bullets |
-| Genuine reflection | ✅ | "What I'd Do Differently" names two concrete sequencing mistakes with specific alternatives |
+Case study's Outcomes section includes the MVP framing and names three specific unimplemented limitations inline rather than deferring them to a separate section.
 
-**Result: ✅ Passed — all required elements present in both artifacts.**
+The case study's What I'd Do Differently section contains two paragraphs of genuine self-critique tied to specific technical decisions, not boilerplate humility.
 
 ---
 
 ## Check 4 — Specificity
 
-**Concrete numbers or named things in the case study:**
+✅ **Passed**
 
-✅ Multiple instances:
-- "six discrete checks" (named in TL;DR and Process sections)
-- "4.5:1 for normal text, 3:1 for large text and UI components" (WCAG AA thresholds)
-- "44×44pt iOS / 48×48dp Android" (touch target minimums — present in documentation; the case study references "six discrete checks" and "state coverage, contrast ratios, touch targets, internal consistency, component coverage, and inspiration alignment" — six named checks)
-- "200-token Project Brief block" vs. "3,000-token conversation history" — concrete comparison
-- "at least five documented decisions" — specific floor, not "several"
-- "5–8 real-world UI references" and "3–5 core user flows" — present in documentation; case study focuses on the structural argument
+**Concrete numbers and named things present.**
+- "200-token structured block" vs. "3,000-token conversation history" — named comparison with a specific tradeoff explained (case study, Named Structured Output Contracts)
+- Six-check Verifier with all checks named: UI state coverage, WCAG AA contrast ratios, touch target sizes, design system consistency, component-to-flow coverage, Inspiration Summary alignment
+- Five-check Validator with all checks named: accuracy against the Profile, voice and tone, completeness, specificity, narrative arc
+- "`agents/04-verifier.md`" as a specific file path illustrating the agent-replacement argument
+- "hex color values with rationale sentences, type scale, spacing system, border radius, elevation" — not "design tokens"
+- "CSS variable values, specific contrast ratios, specific pixel dimensions" cited as outcome signals in the case study
 
-**Usage section in docs — real examples or placeholders:**
+**Inferred challenges described specifically.** The Profile's three inferred challenges (contract-first sequencing mistake, cognitive mode bleeding between agents, human-readable output) all appear in the case study with concrete detail. The sequencing mistake describes the specific cascade effect (updating three downstream prompts per Thinking Partner format change), not a generic iteration challenge.
 
-✅ Passed — examples use real-looking invocations:
-```
-/design-lifecycle
-/design-lifecycle authentication
-/design-lifecycle dashboard
-```
-These are realistic focus areas, not `<your-feature-here>` placeholders.
+**Documentation Usage section.** Real-looking invocation examples with specific focus-area arguments. Each focus area has a short paragraph explaining what specifically changes in the pipeline — the Inspiration agent queries for checkout-specific patterns, the Maker prioritizes payment form layouts — rather than generic "the pipeline runs on your feature."
 
-**Process section names options considered, not just option chosen:**
-
-✅ Passed. "Orchestrator vs. Monolith" explicitly names the alternative: "I could have written one very long prompt." "The Data Contract Problem" describes the range of options: "what exactly gets passed between agents" — raw prose, full conversation histories, typed structured blocks — and explains the landing point. "Why the Verifier Exists" names the conventional alternative (generate → deliver) before explaining why a blocking step was added.
-
-**Result: ✅ Passed.**
+**Case study Process section names alternatives considered.**
+- Zero-Knowledge Orchestrator: explicitly names "one very long prompt" as the rejected alternative with the reason (prompt length is not the same as task focus).
+- Pre-Reading Agent Files: explicitly names "read each agent file immediately before spawning that agent" as the alternative and explains its failure mode (discovering each downstream agent's requirements only when the orchestrator arrives there).
+- Named Structured Output Contracts: explicitly names the 200-token vs. 3,000-token tradeoff and names what is lost by choosing compactness (the reasoning that produced the contract).
 
 ---
 
-## Check 5 — Deck Test
+## Check 5 — The Deck Test
 
-**Clear narrative arc:**
+✅ **Passed** (with one ⚠️ Warning noted below)
 
-✅ Present and well-structured.
+**Narrative arc.** The case study follows Context → Problem → Process → Solution → Outcomes cleanly. The Problem section establishes both the surface failure mode (cross-phase incoherence) and the structural diagnosis (five cognitively incompatible modes). The Process section earns the Solution section — the reader understands why each decision was made before the solution is described. The arc holds.
 
-- Context: "The Situation" — three failure paths developers take, with the one-prompt failure mode named
-- Problem: "The Problem" — collapse of pipeline into prompt, with specific failure artifacts named (wrong contrast ratios, missing empty states, undefined tokens)
-- Process: "Process & Decisions" — three named decisions, each with alternatives considered and rationale
-- Solution: "The Solution" — concrete walk-through of the command and output files
-- Outcomes: "Outcomes & Signals" — what the architecture produces and why it's durable
+**Headline moments.** The case study explicitly surfaces three headline moments in The Solution section:
+1. The orchestrator reads all agent files before spawning any agent.
+2. The Verifier and Validator run before synthesis.
+3. The project has run both skills on itself.
 
-**One identifiable headline moment for a slide:**
+All three are specific, contrast-bearing, and slide-ready. Moment 3 (the self-referential validation claim) is the strongest narrative anchor and the most memorable.
 
-✅ Strong candidate: "The verification has to happen before synthesis, not after. If the Amplifier writes the final DESIGN_BRIEF.md incorporating token values that fail contrast checks, those failures become institutional memory." This is a crisp, specific, arguable claim that a single slide can anchor on.
+**"What's Next" specificity.** All three bullets are specific enough to be slide bullets with no additional elaboration:
+- Structured output contracts: replace heading-based extraction with typed JSON blocks.
+- Verifier and Validator as hard blocking gates: fail-level findings stop the pipeline before the Amplifier runs.
+- Incremental re-runs: restart from a specific phase without re-running upstream phases.
 
-**"What's Next" specific enough for a slide bullet:**
+Each names a concrete change and the current limitation it addresses.
 
-✅ All three are slide-ready:
-1. "Add a Phase 0 — a lightweight pre-flight check that reads the project's existing design system" — named, actionable
-2. "Build a diff mode: run the pipeline against a specific feature branch and produce a design-delta report" — named, specific
-3. "Make the Verifier's contrast check precise — integrating an actual WCAG contrast calculation against the hex values" — named, specific improvement
+⚠️ **Warning — Self-referential claim will propagate to the deck.**
 
-**Result: ✅ Passed — all five arc elements present, headline moment is identifiable, next steps are slide-ready.**
+The TL;DR in the case study contains the "zero warnings" claim flagged in Check 1. If the Amplifier builds the deck from the current case study without correction, that claim will likely appear on a slide. A slide asserting "Validation Report passed all five checks with zero warnings" will contain a claim that does not match this report's findings. The self-referential framing (the project validated itself) is one of the strongest moments in the narrative and should be preserved — but the specific warning count must be accurate before the deck is generated.
 
 ---
 
-## Summary
+## Remediation
 
-| Check | Status |
-|-------|--------|
-| 1 — Accuracy | ✅ Passed |
-| 2 — Voice and Tone | ✅ Passed |
-| 3 — Completeness | ✅ Passed |
-| 4 — Specificity | ✅ Passed |
-| 5 — Deck Test | ✅ Passed |
+Issues ordered by severity. Both items share a root cause: the case study was written before this Validation Report ran, which is the expected pipeline sequencing. These are the Validator's normal findings — items for the Maker's output to correct before the Amplifier runs.
 
-**Overall: ✅ All five checks passed. No critical issues. No warnings.**
+### 1. ⚠️ Update "zero warnings" claim before deck generation
 
-Both artifacts are ready for deck production.
+**Locations:**
+
+- Case study TL;DR, line 13: "the Validation Report passed all five checks with zero warnings"
+- Case study Outcomes section, line 122: "The Validation Report found zero critical failures and zero warnings across accuracy, voice, completeness, specificity, and deck readiness. That includes a line-by-line scan for 'leveraged', 'robust', 'seamless', 'best practices' — none found in either artifact."
+
+**Fix for TL;DR:** Replace "the Validation Report passed all five checks with zero warnings" with "the Validation Report passed all five checks with zero critical findings."
+
+**Fix for Outcomes:** The second sentence (zero-buzzword scan) is accurate and worth keeping. Update the first sentence to: "The Validation Report found zero critical failures across accuracy, voice, completeness, specificity, and deck readiness."
+
+These are sentence-level edits. The self-referential framing (the project validated its own output) remains intact and accurate — only the specific warning-count assertion changes.
+
+### 2. ⚠️ Apply fixes to CASE_STUDY.md before invoking the Amplifier
+
+The Amplifier (deck generator) should receive the corrected case study. Applying these two edits to `showcase/CASE_STUDY.md` before the Amplifier runs prevents the inaccurate claim from propagating into the slide deck.
