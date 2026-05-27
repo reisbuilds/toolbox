@@ -7,125 +7,123 @@ paginate: true
 <!-- _class: lead invert -->
 
 # design-lifecycle
-## One command. Full Double Diamond. Four files.
+
+### Five agents. One command. A design brief you can actually build from.
 
 ---
 
-## Design Is a Sequence. Treat It Like One.
+## The Failure Mode Is Not a Model Problem
 
-A single prompt cannot hold four distinct cognitive modes at once.
+Ask one prompt to design a complete UI spec and you get:
 
-The result: output that sounds authoritative and is structurally broken.
+- Color tokens that don't clear the contrast ratios cited two paragraphs later
+- Component suggestions referencing a "Primary-500" that was never defined in the token table
+- Empty states described in prose, absent from every screen layout
 
-- Wrong contrast ratios
-- Missing UI states
-- Tokens that don't match the components referencing them
-
-Speed without standards is entropy.
+The output feels complete because it's long. It is not complete.
 
 ---
 
-## The Double Diamond Is Not Aesthetic. It's Structural.
+## The Insight: Four Cognitive Modes Cannot Share a Completion
 
-Each phase demands different context, different tools, different output format.
+Design is a sequence of decisions, not a generation event.
 
-- **Discover:** What problem are we actually solving?
-- **Define:** What constraints are real?
-- **Develop:** What does the solution look like in tokens and components?
-- **Deliver:** Does it hold up before it becomes the standard?
+The Double Diamond maps naturally to distinct cognitive tasks:
 
-Collapsing phases doesn't save time. It borrows it from whoever implements the design.
+- **Discover** — read signals, classify, frame the problem
+- **Develop** — research analogous patterns, then specify
+- **Verify** — audit the spec against hard thresholds
+- **Deliver** — synthesize into durable, human-readable guidance
+
+Each mode requires different context, different inputs, different outputs. Collapsing them produces telephone-game quality at each stage.
 
 ---
 
-## The Architecture
-
-SKILL.md (orchestrator) sequences five agents in order and commits four files to disk.
+## The Architecture: One Orchestrator, Five Agents
 
 | Phase | Agent | Output |
-|---|---|---|
+|-------|-------|--------|
 | Discover & Define | Thinking Partner | Project Brief |
 | Discover → Develop | Inspiration | Inspiration Summary |
-| Develop | Maker | design-tokens.md, component-suggestions.md |
-| Before Delivery | Verifier | verification-report.md |
-| Deliver | Amplifier | DESIGN_BRIEF.md |
+| Develop | Maker | `design-tokens.md` + `component-suggestions.md` |
+| Before Delivery | Verifier | `verification-report.md` |
+| Deliver | Amplifier | `DESIGN_BRIEF.md` |
 
-One orchestrator. No content generation at the top level. That separation is the entire design.
+One orchestrator. No design knowledge at the top level. That separation is the whole design.
 
 ---
 
-## The Orchestrator Does One Thing
+## The Orchestration Layer Does One Thing
 
-SKILL.md sequences. It does not generate.
+SKILL.md is a pure coordination layer. It:
 
-- Reads all five agent prompts up-front before spawning anything
+- Reads all five agent files up front — one I/O pass before anything is spawned
 - Extracts named structured blocks from each agent's output
-- Injects only what the next agent needs — not the full conversation history
-- Displays a live checklist so the user sees exactly where the pipeline is
+- Injects only what each downstream agent needs — not the full conversation history
+- Displays a live phase checklist as the pipeline runs
 
 Token counts stay manageable. Agents stay focused. The orchestrator stays out of the way.
 
 ---
 
-## Data Contracts Are the Connective Tissue
+## Data Contracts Prevent Drift
 
-Agents need clean, typed inputs. Not a transcript of upstream reasoning.
+Two structured blocks are the connective tissue of the pipeline:
 
-**Project Brief** — extracted after the Thinking Partner, injected into every downstream agent. Prevents drift across the full pipeline.
+**Project Brief** — produced by the Thinking Partner, passed verbatim to every subsequent agent (Phases 2 through 5). Genre, platform, design maturity, core flows, tone keywords, design problem statement. The Amplifier sees the same brief the Maker saw — not a paraphrase of it.
 
-**Inspiration Summary** — extracted after Inspiration, injected only into Maker and Amplifier. The right context at the right phase.
+**Inspiration Summary** — produced by the Inspiration agent, passed to the Maker and Amplifier. Navigation pattern, color temperature, layout density, CTA placement.
 
-These two blocks are the architecture. Everything else is implementation.
+A 200-token structured block is not a 3,000-token conversation history. These two blocks are the architecture. Everything else is implementation.
 
 ---
 
 <!-- _class: lead invert -->
 
-## The Verifier Is Not Optional
+## Most Pipelines: Generate → Deliver
+## This One: Generate → Verify → Deliver
 
-Most pipelines: generate → deliver.
+The Verifier runs six checks with exact thresholds before the Amplifier writes anything:
 
-This one: generate → **verify** → deliver.
+1. UI state coverage per core flow
+2. WCAG AA contrast ratios — 4.5:1 normal text, 3:1 large text and UI components
+3. Touch targets — 44×44pt iOS / 48×48dp Android
+4. Internal design system consistency
+5. Component coverage versus core flows
+6. Alignment between tokens and Inspiration Summary recommendations
 
-Six checks. Hard thresholds.
-
-- WCAG AA contrast ratios on every text-on-background pair in the token palette
-- Touch targets: 44×44pt iOS, 48×48dp Android
-- Token consistency cross-referenced against every component referencing them
-- Component and flow coverage against the Project Brief
-
-Failures caught here get fixed. Failures that reach DESIGN_BRIEF.md become the implementation standard.
+Failures caught here get fixed. Failures that reach `DESIGN_BRIEF.md` become the implementation standard.
 
 ---
 
-## What You Get
+## What You Get: Four Files That Survive the Conversation
 
-Four files. Committed to disk. Versioned. Survive the conversation.
+| File | What It Contains |
+|------|-----------------|
+| `.design/design-tokens.md` | Color palette with hex values and rationale sentences, full type scale, spacing, border radius, shadow levels |
+| `.design/component-suggestions.md` | Three-layer component hierarchy, ASCII wireframe layouts per core flow, interaction specs for every UI state |
+| `.design/verification-report.md` | Six-check audit with ✅ / ⚠️ / ❌ status per item, contrast ratios, touch target results |
+| `DESIGN_BRIEF.md` | Canonical handoff document — app context, design philosophy, full specs, at least five documented decisions with tradeoffs |
 
-| File | What it is |
-|---|---|
-| `design-tokens.md` | Color, spacing, and type tokens with values and usage |
-| `component-suggestions.md` | Component inventory mapped to design tokens |
-| `verification-report.md` | Six-check quality gate with pass/fail per criterion |
-| `DESIGN_BRIEF.md` | Final synthesized brief, ready to hand to an implementer |
+Committed to disk. Versioned. Survive the conversation.
 
 ---
 
 ## What Was Hard
 
-The data contract problem was solved too late.
+**Defining the data contract before writing the agents.**
+The hardest problem surfaced too late: what fields does the Project Brief need? How is the Inspiration Summary structured? Agent prompt quality depends on the contract being pre-defined, not negotiated. Iterating on prompt quality before locking the contract meant rewriting prompts when the contract changed.
 
-Deciding what to extract as a typed structured block versus what to leave as prose — that decision shaped every agent prompt. The schemas for Project Brief and Inspiration Summary should have been defined before any agent was written.
-
-Define your data contracts first. The prompts become easier. The extraction becomes reliable. The pipeline becomes predictable.
+**Preventing cognitive mode bleeding.**
+Each agent has to stay in its lane. The Verifier does not redesign — it audits. The Inspiration agent does not specify tokens — it synthesizes reference signals. Writing clear output contracts for each agent was the mechanism; the temptation to let agents do "a little of the next phase" was real and would have re-introduced the original failure mode.
 
 ---
 
 ## What's Next
 
-- **Schema validation at extraction time** — catch malformed Project Brief or Inspiration Summary before they propagate downstream
-- **Incremental re-runs** — re-invoke a single agent with an updated brief without restarting the full pipeline
-- **Human-in-the-loop pause points** — surface the Project Brief to the user for approval before the Maker begins, making the definition phase collaborative
+- **Phase 0 pre-flight** — read the project's existing design system (Tailwind config, CSS custom properties, theme files) and pass it to the Maker as a constraint set, so generated tokens extend rather than replace what's already there
+- **Diff mode** — run the pipeline against a feature branch and produce a design-delta report showing what changed relative to the baseline brief
+- **Precise contrast checks** — replace approximate hex-value ratio calculation with a programmatic WCAG contrast check against actual token values, eliminating the "approximate" qualifier from the Verifier's output
 
 ---
 
@@ -133,7 +131,4 @@ Define your data contracts first. The prompts become easier. The extraction beco
 
 # design-lifecycle
 
-One command. Five agents. Four files.
-Full Double Diamond from your terminal.
-
-`.claude/skills/design-lifecycle/`
+`/design-lifecycle` · `.claude/skills/design-lifecycle/`
