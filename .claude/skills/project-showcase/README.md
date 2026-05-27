@@ -3,22 +3,26 @@
 A Claude Code skill that analyzes any existing project and produces three portfolio-ready
 artifacts: comprehensive documentation, a portfolio case study, and a Marp slide deck.
 
+Four agents. One orchestration layer. Each phase receives only what it needs from upstream —
+not a transcript of prior reasoning.
+
 ## Agents
 
-| Phase | Agent | Output |
-|-------|-------|--------|
-| Analyst | Reads the project and builds a Project Profile | Internal context |
-| Docs Writer | Comprehensive technical documentation | `showcase/DOCUMENTATION.md` |
-| Case Study | Portfolio narrative: problem → process → solution → outcomes | `showcase/CASE_STUDY.md` |
-| Deck Builder | Marp markdown slide deck | `showcase/DECK.md` |
+| Phase | Agent | Role | Output |
+|-------|-------|------|--------|
+| 1 | Thinking Partner | Reads the project deeply and frames the narrative | Project Profile (internal) |
+| 2 | Maker | Produces documentation and case study from the Profile | `showcase/DOCUMENTATION.md`, `showcase/CASE_STUDY.md` |
+| 3 | Validator | Checks accuracy, voice, completeness, and specificity | `showcase/VALIDATION_REPORT.md` |
+| 4 | Amplifier | Amplifies the story into a presentation artifact | `showcase/DECK.md` |
 
 ## Output Files
 
 ```
 showcase/
-  DOCUMENTATION.md   Technical + usage docs (comprehensive README-level)
-  CASE_STUDY.md      Portfolio case study narrative
-  DECK.md            Marp slide deck — render to PDF or HTML
+  DOCUMENTATION.md      Technical + usage docs (comprehensive README-level)
+  CASE_STUDY.md         Portfolio case study narrative
+  VALIDATION_REPORT.md  Quality gate findings
+  DECK.md               Marp slide deck — render to PDF or HTML
 ```
 
 ## Installation
@@ -49,8 +53,8 @@ Run from inside the project you want to showcase:
 /project-showcase the onboarding experience
 ```
 
-The focus argument narrows the Analyst's deep-read and shapes the Case Study
-and Deck toward that area, while still reading the broader project for context.
+The focus argument narrows the Thinking Partner's deep-read and shapes all downstream
+artifacts toward that area, while still reading the broader project for context.
 
 ## Rendering the Deck
 
