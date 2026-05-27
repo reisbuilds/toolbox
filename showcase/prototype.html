@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>design-lifecycle — Claude Code Skill</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #080C14;
+      --surface:       #0F1724;
+      --surface-up:    #1A2436;
+      --border:        #1E2D44;
+      --border-bright: #2D4464;
+      --accent:        #5B6EF5;
+      --accent-glow:   rgba(91,110,245,0.15);
+      --accent-text:   #8B9EFF;
+      --text:          #E8EDF5;
+      --text-mid:      #8896AE;
+      --text-dim:      #4A5568;
+      --green:         #10B981;
+      --warn:          #F59E0B;
+      --red:           #EF4444;
+      --r:             12px;
+      --sans:          'Inter', system-ui, -apple-system, sans-serif;
+      --mono:          'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    /* ─── LAYOUT ─────────────────────────────────── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 0 40px; }
+
+    /* ─── NAV ──────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,12,20,0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    nav .wrap {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+    }
+    .nav-brand {
+      font-family: var(--mono); font-size: 14px; font-weight: 500;
+      color: var(--accent-text); letter-spacing: -0.01em;
+    }
+    .nav-badge {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-mid);
+      background: var(--surface-up); border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 20px;
+    }
+
+    /* ─── HERO ─────────────────────────────────────── */
+    .hero {
+      padding: 100px 0 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(91,110,245,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--accent-text);
+      background: var(--accent-glow); border: 1px solid rgba(91,110,245,0.25);
+      padding: 6px 14px; border-radius: 20px; margin-bottom: 32px;
+    }
+    .hero-eyebrow::before {
+      content: ''; display: block; width: 6px; height: 6px;
+      border-radius: 50%; background: var(--accent);
+    }
+    h1 {
+      font-size: clamp(52px, 8vw, 80px); font-weight: 800;
+      letter-spacing: -0.04em; line-height: 0.95;
+      margin-bottom: 28px;
+    }
+    h1 span { color: var(--accent-text); }
+    .hero-sub {
+      font-size: 19px; color: var(--text-mid); max-width: 520px;
+      line-height: 1.55; margin-bottom: 44px;
+    }
+    .hero-cmd {
+      display: inline-flex; align-items: center; gap: 12px;
+      font-family: var(--mono); font-size: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 22px;
+    }
+    .hero-cmd .prompt { color: var(--text-dim); user-select: none; }
+    .hero-cmd .cmd { color: var(--accent-text); }
+    .hero-cmd .arg { color: var(--text-mid); }
+    .hero-stat-row {
+      display: flex; gap: 40px; margin-top: 60px;
+      padding-top: 40px; border-top: 1px solid var(--border);
+    }
+    .hero-stat strong {
+      display: block; font-size: 32px; font-weight: 700;
+      letter-spacing: -0.03em; color: var(--text); line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-stat span { font-size: 13px; color: var(--text-mid); }
+
+    /* ─── SECTION LABELS ────────────────────────────── */
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--text-dim);
+      margin-bottom: 48px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 16px;
+    }
+    .section-body {
+      font-size: 16px; color: var(--text-mid); max-width: 560px; line-height: 1.7;
+    }
+
+    /* ─── DIVIDER ───────────────────────────────────── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+    /* ─── PIPELINE ──────────────────────────────────── */
+    .pipeline-section { padding: 80px 0; }
+    .pipeline-header { margin-bottom: 56px; }
+
+    .pipeline-track {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      position: relative;
+    }
+    .pipeline-track::before {
+      content: '';
+      position: absolute; top: 36px; left: 8%; right: 8%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border) 10%, var(--border) 90%, transparent);
+    }
+    .pipeline-track::after {
+      content: '';
+      position: absolute; top: 32px; left: 8%; right: 50%;
+      height: 9px;
+      background: linear-gradient(90deg, transparent, var(--accent) 10%);
+      opacity: 0.4;
+    }
+
+    .agent {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 0 8px; position: relative; z-index: 1;
+      cursor: default;
+    }
+    .agent-icon {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--surface); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .agent:hover .agent-icon {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+    .agent-num {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px;
+    }
+    .agent-name {
+      font-size: 13px; font-weight: 600; color: var(--text);
+      text-align: center; margin-bottom: 2px; line-height: 1.3;
+    }
+    .agent-phase {
+      font-size: 11px; color: var(--text-dim); text-align: center;
+    }
+    .agent-output {
+      margin-top: 8px; font-family: var(--mono); font-size: 10px;
+      color: var(--accent-text); opacity: 0;
+      transition: opacity 0.2s;
+      text-align: center; line-height: 1.4;
+    }
+    .agent:hover .agent-output { opacity: 1; }
+
+    /* ─── PROBLEM SECTION ───────────────────────────── */
+    .problem-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 0;
+    }
+    .problem-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start;
+    }
+    blockquote {
+      font-size: 26px; font-weight: 500; line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+    blockquote em { font-style: normal; color: var(--accent-text); }
+    .symptom-list { margin-top: 32px; display: flex; flex-direction: column; gap: 12px; }
+    .symptom {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 18px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      font-size: 14px; color: var(--text-mid);
+    }
+    .symptom-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--red); margin-top: 6px; flex-shrink: 0;
+    }
+
+    /* ─── HOW IT WORKS ──────────────────────────────── */
+    .how-section { padding: 80px 0; }
+    .how-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-top: 56px;
+    }
+    .how-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .how-card:hover { border-color: var(--border-bright); }
+    .how-card-num {
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      color: var(--accent); letter-spacing: 0.05em; margin-bottom: 14px;
+    }
+    .how-card h3 {
+      font-size: 16px; font-weight: 600; margin-bottom: 10px; letter-spacing: -0.01em;
+    }
+    .how-card p { font-size: 14px; color: var(--text-mid); line-height: 1.65; }
+
+    /* ─── VERIFIER CALLOUT ──────────────────────────── */
+    .verifier-section {
+      background: linear-gradient(135deg, #1a1060 0%, #0c1a3d 100%);
+      border-top: 1px solid rgba(91,110,245,0.2);
+      border-bottom: 1px solid rgba(91,110,245,0.2);
+      padding: 80px 0;
+    }
+    .verifier-header { margin-bottom: 48px; }
+    .verifier-header .section-title { color: #fff; }
+    .verifier-sub {
+      font-size: 16px; color: rgba(255,255,255,0.6);
+      max-width: 480px; line-height: 1.6; margin-top: 12px;
+    }
+    .verifier-pipeline {
+      font-size: 16px; font-weight: 500; letter-spacing: -0.01em;
+      color: rgba(255,255,255,0.5); margin-bottom: 40px;
+    }
+    .verifier-pipeline strong { color: #fff; }
+    .verifier-pipeline .arrow { color: var(--accent-text); margin: 0 8px; }
+    .check-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;
+    }
+    .check {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; padding: 16px 18px;
+    }
+    .check-icon {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(16,185,129,0.2); border: 1px solid rgba(16,185,129,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: var(--green); flex-shrink: 0; margin-top: 1px;
+    }
+    .check-text { font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.5; }
+    .check-text strong { color: #fff; display: block; margin-bottom: 2px; }
+
+    /* ─── DATA CONTRACT ─────────────────────────────── */
+    .contract-section { padding: 80px 0; }
+    .contract-viz {
+      margin-top: 56px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden;
+    }
+    .contract-header-row {
+      display: grid; grid-template-columns: 160px 1fr;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      background: var(--bg);
+    }
+    .contract-col-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim);
+    }
+    .contract-row {
+      display: grid; grid-template-columns: 160px 1fr;
+      border-bottom: 1px solid var(--border);
+      align-items: center; min-height: 52px;
+    }
+    .contract-row:last-child { border-bottom: none; }
+    .contract-row:hover { background: var(--surface-up); }
+    .contract-agent-name {
+      padding: 0 24px;
+      font-size: 13px; font-weight: 500; color: var(--text-mid);
+      border-right: 1px solid var(--border);
+      height: 100%; display: flex; align-items: center; min-height: 52px;
+    }
+    .contract-flow {
+      padding: 12px 24px; display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pill {
+      font-family: var(--mono); font-size: 11px; font-weight: 500;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .pill-receives {
+      background: rgba(91,110,245,0.12); color: var(--accent-text);
+      border: 1px solid rgba(91,110,245,0.2);
+    }
+    .pill-emits {
+      background: rgba(16,185,129,0.1); color: #34D399;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+    .pill-label {
+      font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 0 2px;
+    }
+
+    /* ─── OUTPUT FILES ──────────────────────────────── */
+    .outputs-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 0;
+    }
+    .output-list { margin-top: 48px; }
+    .output-item {
+      display: grid; grid-template-columns: 260px 1fr 80px;
+      align-items: center; gap: 0;
+      border: 1px solid var(--border); border-radius: var(--r);
+      margin-bottom: 10px; overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .output-item:hover { border-color: var(--border-bright); }
+    .output-file {
+      font-family: var(--mono); font-size: 12px; color: var(--accent-text);
+      padding: 18px 20px;
+      border-right: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .output-desc {
+      font-size: 14px; color: var(--text-mid); padding: 18px 24px; line-height: 1.5;
+    }
+    .output-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim);
+      padding: 18px 16px; text-align: center;
+      border-left: 1px solid var(--border);
+    }
+
+    /* ─── PULL QUOTE ────────────────────────────────── */
+    .pullquote-section { padding: 80px 0; text-align: center; }
+    .pullquote-section blockquote {
+      font-size: clamp(22px, 3.5vw, 32px); font-weight: 500;
+      max-width: 680px; margin: 0 auto 20px;
+      letter-spacing: -0.02em; line-height: 1.3;
+    }
+    .pullquote-section blockquote em { color: var(--accent-text); font-style: normal; }
+    cite {
+      font-size: 13px; font-style: normal; color: var(--text-dim);
+      display: block;
+    }
+
+    /* ─── STATUS REPORT ─────────────────────────────── */
+    .status-section { padding: 80px 0; }
+    .status-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px;
+    }
+    .status-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 24px;
+    }
+    .status-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-dim); margin-bottom: 8px;
+    }
+    .status-value {
+      font-size: 28px; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--green); line-height: 1; margin-bottom: 6px;
+    }
+    .status-detail { font-size: 13px; color: var(--text-dim); }
+
+    /* ─── CTA ───────────────────────────────────────── */
+    .cta-section { padding: 80px 0 100px; }
+    .cta-section .section-title {
+      font-size: clamp(36px, 5vw, 56px); max-width: 600px;
+    }
+    .cta-mono {
+      display: inline-flex; align-items: center; gap: 16px; margin-top: 40px;
+      font-family: var(--mono); font-size: 15px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px 28px;
+    }
+    .cta-mono .prompt { color: var(--text-dim); }
+    .cta-mono .cmd { color: var(--accent-text); }
+    .cta-note {
+      margin-top: 16px; font-size: 13px; color: var(--text-dim);
+    }
+    .cta-note code {
+      font-family: var(--mono); font-size: 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      padding: 2px 6px; border-radius: 4px; color: var(--text-mid);
+    }
+
+    /* ─── FOOTER ────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+    }
+    footer .wrap {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    footer p { font-size: 13px; color: var(--text-dim); }
+    footer code {
+      font-family: var(--mono); font-size: 12px;
+      color: var(--text-mid);
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────── */
+    @media (max-width: 720px) {
+      .wrap { padding: 0 20px; }
+      .problem-grid, .how-grid, .check-grid,
+      .status-grid { grid-template-columns: 1fr; gap: 24px; }
+      .pipeline-track { grid-template-columns: 1fr 1fr; gap: 16px; }
+      .pipeline-track::before, .pipeline-track::after { display: none; }
+      .contract-row { grid-template-columns: 120px 1fr; }
+      .output-item { grid-template-columns: 1fr; }
+      .output-file { border-right: none; border-bottom: 1px solid var(--border); }
+      .output-tag { border-left: none; border-top: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── NAV ──────────────────────────────────────────── -->
+<nav>
+  <div class="wrap">
+    <span class="nav-brand">design&#8209;lifecycle</span>
+    <span class="nav-badge">Claude Code Skill</span>
+  </div>
+</nav>
+
+<!-- ─── HERO ─────────────────────────────────────────── -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow">Multi-agent orchestration</div>
+    <h1>Full Double Diamond.<br><span>One command.</span></h1>
+    <p class="hero-sub">Five specialized agents. Four files committed to your repo. A complete, verifiable design system from any codebase — before you write a line of UI.</p>
+    <div class="hero-cmd">
+      <span class="prompt">$</span>
+      <span class="cmd">/design-lifecycle</span>
+      <span class="arg">&nbsp;authentication flow</span>
+    </div>
+    <div class="hero-stat-row">
+      <div class="hero-stat">
+        <strong>5</strong>
+        <span>specialized agents</span>
+      </div>
+      <div class="hero-stat">
+        <strong>4</strong>
+        <span>files written to disk</span>
+      </div>
+      <div class="hero-stat">
+        <strong>6</strong>
+        <span>verification checks</span>
+      </div>
+      <div class="hero-stat">
+        <strong>0</strong>
+        <span>design knowledge in the orchestrator</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── PIPELINE ─────────────────────────────────────── -->
+<section class="pipeline-section">
+  <div class="wrap">
+    <div class="pipeline-header">
+      <p class="eyebrow">The pipeline</p>
+      <h2 class="section-title">Each phase owns one cognitive mode</h2>
+      <p class="section-body">Cognitive mode bleeding is the failure mode. When you ask one prompt to discover, specify, and verify simultaneously, something always gets dropped. Usually the unglamorous stuff — error states, degraded states, the contrast ratios that fail at 4.2:1.</p>
+    </div>
+
+    <div class="pipeline-track">
+
+      <div class="agent">
+        <div class="agent-icon">🧠</div>
+        <p class="agent-num">Phase 01</p>
+        <p class="agent-name">Thinking Partner</p>
+        <p class="agent-phase">Discover &amp; Define</p>
+        <p class="agent-output">→ Project Brief</p>
+      </div>
+
+      <div class="agent">
+        <div class="agent-icon">✦</div>
+        <p class="agent-num">Phase 02</p>
+        <p class="agent-name">Inspiration</p>
+        <p class="agent-phase">Mobbin / WebSearch</p>
+        <p class="agent-output">→ Inspiration Summary</p>
+      </div>
+
+      <div class="agent">
+        <div class="agent-icon">⚒</div>
+        <p class="agent-num">Phase 03</p>
+        <p class="agent-name">Maker</p>
+        <p class="agent-phase">Develop</p>
+        <p class="agent-output">→ Tokens + Components</p>
+      </div>
+
+      <div class="agent">
+        <div class="agent-icon">◉</div>
+        <p class="agent-num">Phase 04</p>
+        <p class="agent-name">Verifier</p>
+        <p class="agent-phase">Before Delivery</p>
+        <p class="agent-output">→ Verification Report</p>
+      </div>
+
+      <div class="agent">
+        <div class="agent-icon">⚡</div>
+        <p class="agent-num">Phase 05</p>
+        <p class="agent-name">Amplifier</p>
+        <p class="agent-phase">Deliver &amp; Operate</p>
+        <p class="agent-output">→ DESIGN_BRIEF.md</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── PROBLEM ───────────────────────────────────────── -->
+<section class="problem-section">
+  <div class="wrap">
+    <div class="problem-grid">
+      <div>
+        <p class="eyebrow">The problem</p>
+        <blockquote>A single prompt cannot hold <em>discovery, research, specification, verification, and synthesis</em> at once. Something always collapses.</blockquote>
+      </div>
+      <div>
+        <p style="font-size:14px; color:var(--text-mid); margin-bottom:20px; line-height:1.7;">Single-prompt design generation produces output that sounds authoritative. It is structurally broken. The model generates tokens and components simultaneously, so it cannot inspect its own token definitions when writing component suggestions.</p>
+        <p style="font-size:13px; color:var(--text-dim); margin-bottom:20px;">What you get when context collapses:</p>
+        <div class="symptom-list">
+          <div class="symptom">
+            <div class="symptom-dot"></div>
+            Tokens that don't reference the inspiration sourced two phases earlier
+          </div>
+          <div class="symptom">
+            <div class="symptom-dot"></div>
+            Components that don't map to the core flows that were identified
+          </div>
+          <div class="symptom">
+            <div class="symptom-dot"></div>
+            Contrast ratios cited in prose but never calculated against actual hex values
+          </div>
+          <div class="symptom">
+            <div class="symptom-dot"></div>
+            Empty states described and then missing from every screen layout
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── HOW IT WORKS ──────────────────────────────────── -->
+<section class="how-section">
+  <div class="wrap">
+    <p class="eyebrow">How it works</p>
+    <h2 class="section-title">Three decisions that define the architecture</h2>
+    <div class="how-grid">
+
+      <div class="how-card">
+        <p class="how-card-num">Decision 01</p>
+        <h3>The orchestrator reads everything first</h3>
+        <p>SKILL.md reads all five agent files before spawning any sub-agent. The full pipeline is in context before execution begins — not discovered phase by phase. This enables cross-phase reasoning, not just sequential execution.</p>
+      </div>
+
+      <div class="how-card">
+        <p class="how-card-num">Decision 02</p>
+        <h3>The Project Brief travels to every agent</h3>
+        <p>Not just the next agent. The Verifier and Amplifier both receive the original upstream classification — genre, platform, maturity, core flows. The Verifier audits against the problem definition, not against its own reading of the output.</p>
+      </div>
+
+      <div class="how-card">
+        <p class="how-card-num">Decision 03</p>
+        <h3>The Verifier is mandatory, not optional</h3>
+        <p>Most pipelines: generate → deliver. This one: generate → verify → deliver. Failures caught before the Amplifier can be fixed. Failures that reach DESIGN_BRIEF.md become the implementation standard. The check has to happen while it can still block the output.</p>
+      </div>
+
+      <div class="how-card">
+        <p class="how-card-num">Key insight</p>
+        <h3>The orchestrator contains zero design knowledge</h3>
+        <p>SKILL.md sequences and routes. Nothing else. All domain knowledge lives in the agent files. The consequence: individual agents are replaceable without touching the orchestrator. The coordination layer is stable precisely because it is empty of the thing it coordinates.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── DATA CONTRACT ──────────────────────────────────── -->
+<section class="contract-section">
+  <div class="wrap">
+    <p class="eyebrow">Data contracts</p>
+    <h2 class="section-title">Agents need typed inputs, not transcripts</h2>
+    <p class="section-body">Each agent receives exactly what its task requires — a named, structured block extracted from upstream output — not the full conversation history. A 200-token Project Brief is not the same as a 3,000-token conversation thread. The latter buries the signal.</p>
+
+    <div class="contract-viz">
+      <div class="contract-header-row">
+        <span class="contract-col-label">Agent</span>
+        <span class="contract-col-label">Receives → Emits</span>
+      </div>
+
+      <div class="contract-row">
+        <div class="contract-agent-name">Thinking Partner</div>
+        <div class="contract-flow">
+          <span class="pill pill-receives">codebase</span>
+          <span class="pill-label">→ emits</span>
+          <span class="pill pill-emits">Project Brief</span>
+        </div>
+      </div>
+
+      <div class="contract-row">
+        <div class="contract-agent-name">Inspiration</div>
+        <div class="contract-flow">
+          <span class="pill pill-receives">Project Brief</span>
+          <span class="pill-label">→ emits</span>
+          <span class="pill pill-emits">Inspiration Summary</span>
+        </div>
+      </div>
+
+      <div class="contract-row">
+        <div class="contract-agent-name">Maker</div>
+        <div class="contract-flow">
+          <span class="pill pill-receives">Project Brief</span>
+          <span class="pill pill-receives">Inspiration Summary</span>
+          <span class="pill-label">→ emits</span>
+          <span class="pill pill-emits">design-tokens.md</span>
+          <span class="pill pill-emits">component-suggestions.md</span>
+        </div>
+      </div>
+
+      <div class="contract-row">
+        <div class="contract-agent-name">Verifier</div>
+        <div class="contract-flow">
+          <span class="pill pill-receives">Project Brief</span>
+          <span class="pill pill-receives">design-tokens.md</span>
+          <span class="pill pill-receives">component-suggestions.md</span>
+          <span class="pill-label">→ emits</span>
+          <span class="pill pill-emits">verification-report.md</span>
+        </div>
+      </div>
+
+      <div class="contract-row">
+        <div class="contract-agent-name">Amplifier</div>
+        <div class="contract-flow">
+          <span class="pill pill-receives">Project Brief</span>
+          <span class="pill pill-receives">Inspiration Summary</span>
+          <span class="pill pill-receives">all .design/ files</span>
+          <span class="pill-label">→ emits</span>
+          <span class="pill pill-emits">DESIGN_BRIEF.md</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── VERIFIER ───────────────────────────────────────── -->
+<section class="verifier-section">
+  <div class="wrap">
+    <div class="verifier-header">
+      <p class="eyebrow" style="color:rgba(255,255,255,0.3)">Phase 04</p>
+      <h2 class="section-title">Six checks. Before anything ships.</h2>
+      <p class="verifier-sub">AI can generate structure. The Verifier checks coherence — before the Amplifier makes it institutional memory.</p>
+    </div>
+
+    <p class="verifier-pipeline">
+      <strong>Maker</strong>
+      <span class="arrow">→</span>
+      <strong style="color:var(--accent-text)">Verifier</strong>
+      <span class="arrow">→</span>
+      <strong>Amplifier</strong>
+      &nbsp;&nbsp;
+      <span style="color:rgba(255,255,255,0.25); font-size:14px;">not: Maker → Amplifier</span>
+    </p>
+
+    <div class="check-grid">
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>UI state coverage</strong>
+          Empty, loading, error, success, and partial data states — per core flow
+        </div>
+      </div>
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>WCAG AA contrast</strong>
+          4.5:1 normal text · 3:1 large text and UI components
+        </div>
+      </div>
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>Touch targets</strong>
+          44×44pt iOS · 48×48dp Android — buttons and icon-only elements
+        </div>
+      </div>
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>Token consistency</strong>
+          Component references cross-checked against defined token names
+        </div>
+      </div>
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>Component coverage</strong>
+          Every core flow in the Project Brief has a screen layout and feature components
+        </div>
+      </div>
+
+      <div class="check">
+        <div class="check-icon">✓</div>
+        <div class="check-text">
+          <strong>Inspiration alignment</strong>
+          Color direction, typography approach, and density match the Inspiration Summary
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── OUTPUT FILES ───────────────────────────────────── -->
+<section class="outputs-section">
+  <div class="wrap">
+    <p class="eyebrow">Output</p>
+    <h2 class="section-title">Four files. Committed to disk. Versioned.</h2>
+    <p class="section-body">Not ephemeral chat responses. Files you can check into the repo, review in a PR, and reference for months. The project's <code style="font-family:var(--mono);font-size:13px;color:var(--accent-text)">.design/</code> directory becomes a versioned design system baseline.</p>
+
+    <div class="output-list">
+
+      <div class="output-item">
+        <div class="output-file">.design/design-tokens.md</div>
+        <div class="output-desc">Color palette with hex values and rationale · type scale · spacing system · border radius · elevation — every value grounded in the genre and Inspiration Summary</div>
+        <div class="output-tag">Maker</div>
+      </div>
+
+      <div class="output-item">
+        <div class="output-file">.design/component-suggestions.md</div>
+        <div class="output-desc">Component hierarchy (primitives → composed → feature) · ASCII wireframes per core flow · interaction patterns for all five states: empty, loading, error, success, partial data</div>
+        <div class="output-tag">Maker</div>
+      </div>
+
+      <div class="output-item">
+        <div class="output-file">.design/verification-report.md</div>
+        <div class="output-desc">Six-check audit with ✅ / ⚠️ / ❌ per criterion · calculated contrast ratios · remediation ordered by severity — before the Amplifier synthesizes anything</div>
+        <div class="output-tag">Verifier</div>
+      </div>
+
+      <div class="output-item">
+        <div class="output-file">DESIGN_BRIEF.md</div>
+        <div class="output-desc">Canonical handoff artifact written for human designers and developers — design philosophy, full token spec, component spec, verification status, decisions &amp; rationale, next steps</div>
+        <div class="output-tag">Amplifier</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ─── PULL QUOTE ─────────────────────────────────────── -->
+<section class="pullquote-section">
+  <div class="wrap">
+    <blockquote>
+      "The orchestrator is stable precisely because it is <em>empty of the thing it coordinates</em>."
+    </blockquote>
+    <cite>— design-lifecycle Case Study</cite>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── VALIDATION STATUS ─────────────────────────────── -->
+<section class="status-section">
+  <div class="wrap">
+    <p class="eyebrow">Validation run — design-lifecycle as subject</p>
+    <h2 class="section-title">The skill showcased itself</h2>
+    <p class="section-body">The project-showcase skill was run against design-lifecycle as the subject project. The Validator passed all five checks on the first run.</p>
+
+    <div class="status-grid">
+
+      <div class="status-card">
+        <p class="status-label">Buzzwords found</p>
+        <p class="status-value">0</p>
+        <p class="status-detail">No "leveraged", "robust", "scalable", "best practices"</p>
+      </div>
+
+      <div class="status-card">
+        <p class="status-label">Checks passed</p>
+        <p class="status-value">5/5</p>
+        <p class="status-detail">Accuracy · voice · completeness · specificity · deck test</p>
+      </div>
+
+      <div class="status-card">
+        <p class="status-label">Headline moment</p>
+        <p class="status-value" style="font-size:14px; line-height:1.4; margin-top:4px;">Verifier placement</p>
+        <p class="status-detail">Failures before Amplifier can be fixed. After: they become the standard.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ─── CTA ───────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="wrap">
+    <p class="eyebrow">Get started</p>
+    <h2 class="section-title">One command. Full Double Diamond. Four files.</h2>
+    <div class="cta-mono">
+      <span class="prompt">$</span>
+      <span class="cmd">/design-lifecycle</span>
+    </div>
+    <p class="cta-note">Scoped to a feature: <code>/design-lifecycle authentication flow</code> &nbsp;·&nbsp; <code>/design-lifecycle dashboard</code></p>
+  </div>
+</section>
+
+<!-- ─── FOOTER ────────────────────────────────────────── -->
+<footer>
+  <div class="wrap">
+    <p>design-lifecycle · Claude Code Skill · <code>.claude/skills/design-lifecycle/</code></p>
+    <p>Speed without standards is entropy.</p>
+  </div>
+</footer>
+
+</body>
+</html>
